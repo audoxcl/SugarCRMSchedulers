@@ -32,15 +32,16 @@ function SendEmail($emailsTo, $emailSubject, $emailBody){
 }
 
 function CustomScheduler(){
-	global $current_user, $db;
+	global $sugar_config, $db;
 	$timeDate = new TimeDate();
 	$timeDateNow = $timeDate->getNow(true)->asDb();
+	$days_offset = 15;
 	$GLOBALS['log']->fatal("Checking Opportunities...");
-	$query = "select id from opportunities
+	$query = "select opportunities.id from opportunities
 	where opportunities.sales_stage != 'Closed Won'
-	and DATEDIFF(opportunities.date_modified,'".$timeDateNow."') < 15
+	and DATEDIFF(opportunities.date_modified,'".$timeDateNow."') < ".$days_offset."
 	and !opportunities.deleted";
-	// $res = $focus->db->query($sql, true);
+	$GLOBALS['log']->fatal("Query: ".$query);
 	$res = $db->query($query, true, 'Error: ');
 	while($row = $db->fetchByAssoc($res)){
 		$opportunity = new Opportunity();
@@ -49,12 +50,14 @@ function CustomScheduler(){
 			if(!is_null($user->retrieve($opportunity->assigned_user_id))){
 				$emailsTo = array();
 				$emailSubject = "Opportunity Alert";
-				$emailBody = "The Opportunity ".$bean->name." has 15 days without changes.<br /><br />
-				Sales Stage: ".$bean->sales_stage."<br />
-				Amount: ".$bean->amount."<br />
-				Date Close: ".$bean->date_closed."<br /><br />
+				$emailBody = "The following Opportunity has ".$days_offset." days without changes.<br /><br />
+				Name: ".$opportunity->name."<br />
+				Account: ".$opportunity->account_name."<br />
+				Amount: ".$opportunity->amount."<br />
+				Sales Stage: ".$opportunity->sales_stage."<br />
+				Date Close: ".$opportunity->date_closed."<br /><br />
 				You can see the opportunity here:<br />
-				<a href=\"".$sugar_config['site_url']."/index.php?module=Opportunities&action=DetailView&record=".$bean->id."\">".$bean->name."</a>";
+				<a href=\"".$sugar_config['site_url']."/index.php?module=Opportunities&action=DetailView&record=".$opportunity->id."\">".$opportunity->name."</a>";
 				$emailsTo[] = $user->email1;
 				SendEmail($emailsTo, $emailSubject, $emailBody);
 			}
