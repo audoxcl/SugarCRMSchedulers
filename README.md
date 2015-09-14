@@ -1,4 +1,4 @@
-# SugarCRMSchedulers
+# SugarCRM Schedulers Template
 
 In this example you can see a ready to use template for create Schedulers.
 
